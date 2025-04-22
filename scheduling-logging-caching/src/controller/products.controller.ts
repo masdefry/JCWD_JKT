@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
+import redis from '../config/redis.config';
+const cacheKey = 'products:id'
 
 export const findProducts = async(
   req: Request,
@@ -8,7 +10,6 @@ export const findProducts = async(
   next: NextFunction
 ) => {
   try {
-    console.log('>>>')
     const { id } = req.params
 
     const findProductById = await prisma.product.findFirst({
@@ -17,7 +18,9 @@ export const findProducts = async(
       }
     })
 
-    if(!findProductById) throw {isOperational: true, message: `Product with id ${id} not found`}
+    if(!findProductById) throw {isOperational: true, message: `Product with id ${id} not found`, status: 404}
+
+    await redis.set(`${cacheKey}=${id}`, JSON.stringify(findProductById), 'EX', 10)
 
     res.status(200).json({
       success: true, 

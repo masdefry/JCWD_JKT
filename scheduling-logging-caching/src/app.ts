@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response, Express } from 'express';
 import productsRouter from './routers/products.router';
+import logger from './utils/logger';
 
 const app: Express = express();
 
@@ -12,10 +13,19 @@ app.get('/', (_req, res) => {
 app.use('/api/products', productsRouter);
 
 // Centralized Error
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  res.status(500).json({
+interface IError extends Error{
+  status?: number, 
+  isOperational?: boolean
+}
+
+app.use((err: IError, req: Request, res: Response, next: NextFunction) => {
+  const errorStatus: number = err.isOperational? err.status! : 500;
+
+  logger.error(`${req.method} - ${req.url}, ${err.message}`)
+
+  res.status(errorStatus).json({
     success: false,
-    message: err.message,
+    message: err.isOperational? err.message : 'Interval Server Error',
     data: null,
   });
 });
