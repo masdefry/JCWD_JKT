@@ -30,11 +30,11 @@ const transactionItems = [
 ];
 
 async function main() {
-  // for (const product of products) {
-  //   await prisma.product.create({
-  //     data: product,
-  //   });
-  // }
+  for (const product of products) {
+    await prisma.product.create({
+      data: product,
+    });
+  }
 
   const createdTransaction = await prisma.transaction.create({
     data: transactions[0],
